@@ -1,0 +1,19 @@
+{
+  "name": "wsh-player-web",
+  "version": "1.0.0",
+  "description": "realtime player of wash files",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vaporstack/wsh-player-web.git"
+  },
+  "author": "vaporstack",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/vaporstack/wsh-player-web/issues"
+  },
+  "homepage": "https://github.com/vaporstack/wsh-player-web#readme"
+}
