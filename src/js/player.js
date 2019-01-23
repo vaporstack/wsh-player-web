@@ -1,25 +1,23 @@
-
-
 var state = {};
 
 function readTextFile(file)
 {
-    var rawFile = new XMLHttpRequest();
-    rawFile.open("GET", file, false);
-    var allText;
-    rawFile.onreadystatechange = function ()
-    {
-        if(rawFile.readyState === 4)
-        {
-            if(rawFile.status === 200 || rawFile.status == 0)
-            {
-                allText = rawFile.responseText;
-                //alert(allText);
-            }
-        }
-    }
-    rawFile.send(null);
-    return allText;
+	var rawFile = new XMLHttpRequest();
+	rawFile.open("GET", file, false);
+	var allText;
+	rawFile.onreadystatechange = function()
+	{
+		if (rawFile.readyState === 4)
+		{
+			if (rawFile.status === 200 || rawFile.status == 0)
+			{
+				allText = rawFile.responseText;
+				//alert(allText);
+			}
+		}
+	}
+	rawFile.send(null);
+	return allText;
 }
 
 function get_bounds(obj)
@@ -30,17 +28,17 @@ function get_bounds(obj)
 	maxx = maxy = Number.NEGATIVE_INFINITY;
 
 	var lines = obj.lines;
-	for ( var i = 0; i < lines.length; i++ )
+	for (var i = 0; i < lines.length; i++)
 	{
 		var l = lines[i];
-		for ( var j = 0; j < l.points_x.length; j++)
+		for (var j = 0; j < l.points_x.length; j++)
 		{
 			var x = l.points_x[j];
 			var y = l.points_y[j];
-			if ( x < minx ) minx = x;
-			if ( x > maxx ) maxx = x;
-			if ( y < miny ) miny = y;
-			if ( y > maxy ) maxy = y;
+			if (x < minx) minx = x;
+			if (x > maxx) maxx = x;
+			if (y < miny) miny = y;
+			if (y > maxy) maxy = y;
 
 		}
 	}
@@ -131,18 +129,18 @@ function normalize_frame(obj)
 }
 */
 
-function render_line( line)
+function render_line(line)
 {
 	var c = window.ctx;
 	var px, py;
-	for ( var i = 0, n = line.points_x.length; i<n; i++ )
+	for (var i = 0, n = line.points_x.length; i < n; i++)
 	{
 
 		var x = line.points_x[i];
 		var y = line.points_y[i] * -1;
-		c.moveTo(x,y);
-		if ( i > 0 )
-		c.lineTo(px,py);
+		c.moveTo(x, y);
+		if (i > 0)
+			c.lineTo(px, py);
 		c.stroke();
 		px = x;
 		py = y;
@@ -150,29 +148,40 @@ function render_line( line)
 	}
 }
 
-function finished_drawing()
+function restart()
+{
+	console.log("RESTART");
+	do_finished_drawing();
+	setup_drawdata();
+	clear();
+	start_drawing();
+}
+
+function do_finished_drawing()
 {
 
 	remove_interval();
 	state.playing = false;
 	console.log("DONE");
+	clear();
+	setup_drawdata();
+	start_drawing();
+	//return;
 }
 
 function check_draw_content()
 {
-	if ( !state.playing )
+	if (!state.playing)
 	{
 		console.log("Shouldn't be here, not playing shouldn't be echecking!");
+		return;
 	}
-	var now = new Date().getTime()/1000;
+	var now = new Date().getTime() / 1000;
 	var delta = now - state['drawing_start'];
 
-	if ( state.working.lines.length == 0 )
+	if (state.working.lines.length < 150)
 	{
-		finished_drawing();
-		setup_drawdata(state.document);
-		clear();
-		start_drawing();
+		do_finished_drawing();
 		return;
 	}
 
@@ -204,25 +213,28 @@ function remove_interval()
 
 function add_interval()
 {
-	state['draw_interval'] = setInterval(check_draw_content, 1000/60);
+	state['draw_interval'] = setInterval(check_draw_content, 1000 / 60);
 }
 
 function load_wash(path)
 {
 	var text = readTextFile(path);
-	return  JSON.parse(text);
+	return JSON.parse(text);
 
 }
 
 function clear()
 {
+	ctx.fillStyle = "red";
 
-	window.ctx.clearRect(0,0,256,256);
+	window.ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
 }
 
 //takes a document
-function setup_drawdata(doc)
+function setup_drawdata()
 {
+	var doc = load_wash("data/test.wash");
+
 	//setup_drawdata(json);
 	var ldata = doc.data;
 	var lmeta = doc.meta;
@@ -250,31 +262,22 @@ function init()
 	setup_refresh();
 
 	var headline = $("#infotext")[0];
-	headline.innerText="loading data...";
+	headline.innerText = "loading data...";
 
 	var c = $("#player");
 
 	var doc = load_wash("data/test.wash");
 	var headline = $("#infotext")[0];
+	state.document = doc;
+	headline.innerText = "parsing data...";
+	setup_drawdata();
 
-	headline.innerText="parsing data...";
-	setup_drawdata(doc);
-
-	headline.innerText="done";
-	//setTimeout(headline.remove, 1000);
-	//sleep(1000);
+	headline.innerText = "done";
 	headline.remove();
 
-
-
-
-	//var c = window.ctx;
-
-	// console.log(lines.length);
-	// console.log(first);
-	// console.log(data);
+	var loc = state;
 	console.log("Ready. ");
-
+	console.log("Frame has " + state.working.lines.length + " lines.");
 	start_drawing();
 
 
@@ -285,26 +288,30 @@ function setup_refresh()
 {
 	var htmlCanvas = document.getElementById('player'),
 
-    	context = htmlCanvas.getContext('2d');
+		context = htmlCanvas.getContext('2d');
 	context.scale(0.125, 0.025);
 	initialize();
 	window.ctx = context;
-	function initialize() {
+
+	function initialize()
+	{
 		window.addEventListener('resize', resizeCanvas, false);
 		resizeCanvas();
 	}
 
-	function redraw() {
-	context.strokeStyle = 'black';
+	function redraw()
+	{
+		context.strokeStyle = 'black';
 		context.lineWidth = '.25';
 		context.strokeRect(0, 0, window.innerWidth, window.innerHeight);
 	}
 
-	function resizeCanvas() {
+	function resizeCanvas()
+	{
 		htmlCanvas.width = window.innerWidth;
 		htmlCanvas.height = window.innerHeight;
 		redraw();
-}
+	}
 };
 
 
@@ -314,23 +321,40 @@ function playpause()
 	state['playing'] = !state['playing'];
 	console.log(state['playing']);
 
-	if ( !state['playing'] )
+	if (!state['playing'])
 	{
 		remove_interval();
-	}else{
+	}
+	else
+	{
 		add_interval();
 	}
 }
 
-document.addEventListener('keydown', function(event) {
-console.log(event.code);
-if (event.code == "Space" )
-	playpause();
+document.addEventListener('keydown', function(event)
+{
+	console.log(event.code);
+	switch (event.code)
+	{
+		case "Space":
+			playpause();
+			break;
+		case "KeyR":
+			restart();
+			break;
+		case "KeyC":
+			clear();
+			break;
 
-  if (event.code == 'KeyZ' && (event.ctrlKey || event.metaKey)) {
-    alert('Undo!')
-  }
+		default:
+			console.log("Unhandled key: " + event.code);
+			break;
+
+	}
+	// if (event.code == "Space" )
+	// 	playpause();
+
+	//   if (event.code == 'KeyZ' && (event.ctrlKey || event.metaKey)) {
+	//     alert('Undo!')
+	// }
 });
-
-
-
