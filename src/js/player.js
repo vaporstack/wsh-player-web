@@ -47,6 +47,8 @@ function get_bounds(obj)
 	return [minx, miny, maxx, maxy];
 }
 
+/*
+
 function normalize_frame_time(obj)
 {
 	var first = Number.POSITIVE_INFINITY;
@@ -127,6 +129,7 @@ function normalize_frame(obj)
 	//then, scale it to something nice relative to the window size
 	return obj;
 }
+*/
 
 function render_line( line)
 {
@@ -167,6 +170,9 @@ function check_draw_content()
 	if ( state.working.lines.length == 0 )
 	{
 		finished_drawing();
+		setup_drawdata(state.document);
+		clear();
+		start_drawing();
 		return;
 	}
 
@@ -208,11 +214,18 @@ function load_wash(path)
 
 }
 
-function setup_drawdata(json)
+function clear()
+{
+
+	window.ctx.clearRect(0,0,256,256);
+}
+
+//takes a document
+function setup_drawdata(doc)
 {
 	//setup_drawdata(json);
-	var ldata = json.data;
-	var lmeta = json.meta;
+	var ldata = doc.data;
+	var lmeta = doc.meta;
 	info = $("#info");
 	info.html("drawing: " + lmeta.info.path);
 	//console.log(meta);
@@ -220,13 +233,15 @@ function setup_drawdata(json)
 	var seq = ldata.sequence;
 	var frames = seq.frames;
 	var first = frames[0];
-	var nf = normalize_frame(first);
-	var nnf = normalize_frame_time(nf);
+	if (!first.normalized_scale)
+		first = wsh_frame_ops_normalize_wobject(first);
+	if (!first.normalized_time)
+		first = wsh_frame_ops_normalize_wobject_time(first);
 
-	state.document = ldata;
+	state.document = doc;
 	state.meta = lmeta;
-	state.frame = nnf;
-	state.working = nnf;
+	state.frame = first;
+	state.working = first;
 
 }
 
@@ -239,11 +254,11 @@ function init()
 
 	var c = $("#player");
 
-	var json = load_wash("data/test2.wash");
+	var doc = load_wash("data/test.wash");
 	var headline = $("#infotext")[0];
 
 	headline.innerText="parsing data...";
-	setup_drawdata(json);
+	setup_drawdata(doc);
 
 	headline.innerText="done";
 	//setTimeout(headline.remove, 1000);
