@@ -1,3 +1,7 @@
+
+
+var state = {};
+
 function readTextFile(file)
 {
     var rawFile = new XMLHttpRequest();
@@ -43,6 +47,29 @@ function get_bounds(obj)
 	return [minx, miny, maxx, maxy];
 }
 
+function normalize_frame_time(obj)
+{
+	var first = Number.POSITIVE_INFINITY;
+	for ( var i = 0, n = obj.lines.length; i < n; i++ )
+	{
+		var l = obj.lines[i];
+		for ( var j = 0, n2 = l.time.length; j < n2; j++ )
+		{
+			var t = l.time[j];
+			if ( t < first )
+			{
+				first = t;
+			}
+		}
+	}
+	console.log(first);
+	for ( var i = 0, n = obj.lines.length; i < n; i++ )
+		for ( var j = 0, n2 = obj.lines[i].time.length; j < n2; j++ )
+			obj.lines[i].time[j] -= first;
+
+	return obj;
+}
+
 function normalize_frame(obj)
 {
 	var bounds = get_bounds(obj);
@@ -81,8 +108,8 @@ function normalize_frame(obj)
 			obj.lines[i].points_x[j] *= scale;
 			obj.lines[i].points_y[j] *= scale;
 
-			obj.lines[i].points_x[j] += wbigger ;
-			obj.lines[i].points_y[j] += wbigger;
+			obj.lines[i].points_x[j] += w * .5 ;
+			obj.lines[i].points_y[j] -= h * .5;
 
 
 		}
@@ -101,8 +128,9 @@ function normalize_frame(obj)
 	return obj;
 }
 
-function render_line(c, line)
+function render_line( line)
 {
+	var c = window.ctx;
 	var px, py;
 	for ( var i = 0, n = line.points_x.length; i<n; i++ )
 	{
@@ -119,47 +147,121 @@ function render_line(c, line)
 	}
 }
 
-function init()
+function finished_drawing()
 {
-	setup_refresh();
-	var headline = $("#infotext")[0];
-	//console.log(headline);
-	//var v = headline.val();
-	//console.log(v);
-	headline.innerText="Loading";
-	//console.log("hello");
-	var c = $("#player");
+
+	remove_interval();
+	state.playing = false;
+	console.log("DONE");
+}
+
+function check_draw_content()
+{
+	if ( !state.playing )
+	{
+		console.log("Shouldn't be here, not playing shouldn't be echecking!");
+	}
+	var now = new Date().getTime()/1000;
+	var delta = now - state['drawing_start'];
+
+	if ( state.working.lines.length == 0 )
+	{
+		finished_drawing();
+		return;
+	}
+
+	var next = state.working.lines.shift();
+	//console.log(next);
+	render_line(next);
+	//console.log(delta);
+
+	//console.log("yep");
 
 
-	//console.log(c);
-	var text = readTextFile("data/test.wash");
-	var json = JSON.parse(text);
-	headline.innerText="done";
-	headline.remove();
+	//console.log("checking draw content");
+}
 
-	var data = json.data;
-	var meta = json.meta;
+function start_drawing()
+{
+	var d = new Date();
+	state['drawing_start'] = d.getTime() / 1000;
+	state['playing'] = true;
+	state['done'] = false;
+	add_interval();
+
+}
+
+function remove_interval()
+{
+	clearInterval(state['draw_interval']);
+}
+
+function add_interval()
+{
+	state['draw_interval'] = setInterval(check_draw_content, 1000/60);
+}
+
+function load_wash(path)
+{
+	var text = readTextFile(path);
+	return  JSON.parse(text);
+
+}
+
+function setup_drawdata(json)
+{
+	//setup_drawdata(json);
+	var ldata = json.data;
+	var lmeta = json.meta;
 	info = $("#info");
-	info.html("drawing: " + meta.info.path);
+	info.html("drawing: " + lmeta.info.path);
 	//console.log(meta);
 
-	var seq = data.sequence;
+	var seq = ldata.sequence;
 	var frames = seq.frames;
 	var first = frames[0];
 	var nf = normalize_frame(first);
-	var lines = nf.lines;
+	var nnf = normalize_frame_time(nf);
 
-	var c = window.ctx;
+	state.document = ldata;
+	state.meta = lmeta;
+	state.frame = nnf;
+	state.working = nnf;
+
+}
+
+function init()
+{
+	setup_refresh();
+
+	var headline = $("#infotext")[0];
+	headline.innerText="loading data...";
+
+	var c = $("#player");
+
+	var json = load_wash("data/test2.wash");
+	var headline = $("#infotext")[0];
+
+	headline.innerText="parsing data...";
+	setup_drawdata(json);
+
+	headline.innerText="done";
+	//setTimeout(headline.remove, 1000);
+	//sleep(1000);
+	headline.remove();
+
+
+
+
+	//var c = window.ctx;
+
 	// console.log(lines.length);
 	// console.log(first);
 	// console.log(data);
-	console.log("Beginning drawing. ");
-	for ( var i = 0 , n = lines.length; i< n; i++)
-	{
-		//console.log("Drawing line " + i);
-		var l = lines[i];
-		render_line(c, l);
-	}
+	console.log("Ready. ");
+
+	start_drawing();
+
 
 
 }
@@ -169,6 +271,7 @@ function setup_refresh()
 	var htmlCanvas = document.getElementById('player'),
 
     	context = htmlCanvas.getContext('2d');
+	context.scale(0.125, 0.025);
 	initialize();
 	window.ctx = context;
 	function initialize() {
@@ -178,7 +281,7 @@ function setup_refresh()
 
 	function redraw() {
 	context.strokeStyle = 'black';
-		context.lineWidth = '1';
+		context.lineWidth = '.25';
 		context.strokeRect(0, 0, window.innerWidth, window.innerHeight);
 	}
 
@@ -188,3 +291,31 @@ function setup_refresh()
 		redraw();
 }
 };
+
+
+function playpause()
+{
+
+	state['playing'] = !state['playing'];
+	console.log(state['playing']);
+
+	if ( !state['playing'] )
+	{
+		remove_interval();
+	}else{
+		add_interval();
+	}
+}
+
+document.addEventListener('keydown', function(event) {
+console.log(event.code);
+if (event.code == "Space" )
+	playpause();
+
+  if (event.code == 'KeyZ' && (event.ctrlKey || event.metaKey)) {
+    alert('Undo!')
+  }
+});
+
+
+
