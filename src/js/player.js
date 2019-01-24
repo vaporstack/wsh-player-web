@@ -129,6 +129,115 @@ function normalize_frame(obj)
 }
 */
 
+function zip_line(data)
+{
+	var res = [];
+	for ( var i=0,n = data.points_x.length; i < n ; i++ )
+	{
+		var p = {
+			x : data.points_x[i],
+			y : data.points_y[i] * -1,
+			p : data.pressure[i]
+		}
+
+		res.push(p);
+	}
+	return res;
+}
+
+function angle_from_points(ax, ay, bx, by)
+{
+	return Math.atan2(by - ay, bx - ax);
+}
+
+function angle_from_points_p(a, b)
+{
+	return Math.atan2(b.y - a.y, b.x - a.x);
+}
+
+function mk_point()
+{
+	return { x : -1, y : -1, p : -1 };
+}
+
+function render_brush(line)
+{
+	var ctx = window.ctx;
+	var l = zip_line(line)
+	var first = l[0];
+
+	var width = 10;
+
+	var left = [];
+	var right = [];
+	for ( var i = 1, n = l.length - 1; i<n; i++ )
+	{
+		var a = l[i-1];
+		var b = l[i + 0];
+		var c = l[i + 1];
+		var ps = (a.p + b.p + c.p) / 3;
+		var ang = angle_from_points_p(a, b);
+		ang -= Math.PI * .5;
+
+		var lp = mk_point();
+		var rp = mk_point();
+
+		lp.x = a.x + (Math.cos(ang) * ps * width);
+		lp.y = a.y + (Math.sin(ang) * ps * width);
+
+		ang += Math.PI;
+		rp.x = a.x + (Math.cos(ang) * ps * width);
+		rp.y = a.y + (Math.sin(ang) * ps * width);
+		left.push(lp);
+		right.push(rp);
+
+
+	}
+
+	right.push(l[l.length-1]);
+
+	var stroke = left.slice();
+	for ( var i = right.length-1; i > 0; i--)
+	{
+		stroke.push(right[i]);
+
+	}
+
+	if(stroke.length == 0)
+	{
+		console.log("NO points!\n");
+		return;
+	}
+
+	console.log("Created stroke with " + stroke.length + " points");
+
+	var first = stroke[0];
+	var px, py;
+	px = first.x;
+	py = first.y;
+	ctx.beginPath();
+
+	for ( var i = 0 ; i < stroke.length; i++ )
+	{
+		var p = stroke[i];
+		ctx.moveTo(px, py);
+		ctx.lineTo(p.x, p.y);
+		px = p.x;
+		py = p.y;
+	}
+	//ctx.closePath();
+	ctx.stroke();
+	ctx.fillStyle = "red";;
+
+	ctx.fill();
+
+
+	//console.log(first);
+
+
+
+}
+
 function render_line(line)
 {
 	var c = window.ctx;
@@ -138,6 +247,9 @@ function render_line(line)
 
 		var x = line.points_x[i];
 		var y = line.points_y[i] * -1;
+		//x = Math.floor(x);
+		//y = Math.floor(y);
+		c.beginPath();
 		c.moveTo(x, y);
 		if (i > 0)
 			c.lineTo(px, py);
@@ -179,7 +291,7 @@ function check_draw_content()
 	var now = new Date().getTime() / 1000;
 	var delta = now - state['drawing_start'];
 
-	if (state.working.lines.length < 150)
+	if (state.working.lines.length == 0)
 	{
 		do_finished_drawing();
 		return;
@@ -187,7 +299,8 @@ function check_draw_content()
 
 	var next = state.working.lines.shift();
 	//console.log(next);
-	render_line(next);
+	//render_line(next);
+	render_brush(next);
 	//console.log(delta);
 
 	//console.log("yep");
@@ -302,7 +415,7 @@ function setup_refresh()
 	function redraw()
 	{
 		context.strokeStyle = 'black';
-		context.lineWidth = '.25';
+		context.lineWidth = 1;
 		context.strokeRect(0, 0, window.innerWidth, window.innerHeight);
 	}
 
