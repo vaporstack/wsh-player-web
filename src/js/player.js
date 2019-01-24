@@ -45,100 +45,17 @@ function get_bounds(obj)
 	return [minx, miny, maxx, maxy];
 }
 
-/*
-
-function normalize_frame_time(obj)
-{
-	var first = Number.POSITIVE_INFINITY;
-	for ( var i = 0, n = obj.lines.length; i < n; i++ )
-	{
-		var l = obj.lines[i];
-		for ( var j = 0, n2 = l.time.length; j < n2; j++ )
-		{
-			var t = l.time[j];
-			if ( t < first )
-			{
-				first = t;
-			}
-		}
-	}
-	console.log(first);
-	for ( var i = 0, n = obj.lines.length; i < n; i++ )
-		for ( var j = 0, n2 = obj.lines[i].time.length; j < n2; j++ )
-			obj.lines[i].time[j] -= first;
-
-	return obj;
-}
-
-function normalize_frame(obj)
-{
-	var bounds = get_bounds(obj);
-	var minx = bounds[0];
-	var miny = bounds[1];
-	var maxx = bounds[2];
-	var maxy = bounds[3];
-	console.log(minx, miny, maxx, maxy);
-	console.log(obj)
-
-	var dx = maxx - minx;
-	var dy = maxy - miny;
-	var bigger = (dx > dy ) ? dx : dy;
-	var w = window.innerWidth;
-	var h = window.innerHeight;
-	console.log("normalizing by " + bigger);
-	var wbigger = ( w > h ) ? w : h;
-	console.log("scaling to " + wbigger);
-	var scale = wbigger * .75;
-
-	var shift = wbigger * .5;
-	//	shift the data to be 0-1 positive and shrink it
-
-	for ( var i = 0; i < obj.lines.length; i++ )
-	{
-		for ( var j = 0; j < obj.lines[i].points_x.length; j++)
-		{
-			//obj.lines[i].points_x[j] -= minx;
-			//obj.lines[i].points_y[j] = miny;
-
-			//	cut it to 0-1
-			obj.lines[i].points_x[j] /= bigger;
-			obj.lines[i].points_y[j] /= bigger;
-
-			// //	scale it to window size
-			obj.lines[i].points_x[j] *= scale;
-			obj.lines[i].points_y[j] *= scale;
-
-			obj.lines[i].points_x[j] += w * .5 ;
-			obj.lines[i].points_y[j] -= h * .5;
-
-
-		}
-	}
-
-
-	var bounds = get_bounds(obj);
-	var minx = bounds[0];
-	var miny = bounds[1];
-	var maxx = bounds[2];
-	var maxy = bounds[3];
-	console.log(minx + "/" +  miny + " " + maxx + "/"+ maxy);
-
-
-	//then, scale it to something nice relative to the window size
-	return obj;
-}
-*/
 
 function zip_line(data)
 {
 	var res = [];
-	for ( var i=0,n = data.points_x.length; i < n ; i++ )
+	for (var i = 0, n = data.points_x.length; i < n; i++)
 	{
 		var p = {
-			x : data.points_x[i],
-			y : data.points_y[i] * -1,
-			p : data.pressure[i],
-			t : data.time[i]
+			x: data.points_x[i],
+			y: data.points_y[i] * -1,
+			p: data.pressure[i],
+			t: data.time[i]
 		}
 		res.push(p);
 	}
@@ -157,7 +74,11 @@ function angle_from_points_p(a, b)
 
 function mk_point()
 {
-	return { x : -1, y : -1, p : -1 };
+	return {
+		x: -1,
+		y: -1,
+		p: -1
+	};
 }
 
 function render_brush(line, pos)
@@ -168,20 +89,20 @@ function render_brush(line, pos)
 
 	var width = 10;
 
-	if ( pos === undefined )
-		pos = l.length-1;
+	if (pos === undefined)
+		pos = l.length - 1;
 
-	if ( pos > l.length - 1 )
+	if (pos > l.length - 1)
 	{
-		console.log("ack tried to draw more than we have");
+		//console.log("ack tried to draw more than we have");
 		pos = l.length - 1;
 	}
 
 	var left = [];
 	var right = [];
-	for ( var i = 1, n = pos; i<n; i++ )
+	for (var i = 1, n = pos; i < n; i++)
 	{
-		var a = l[i-1];
+		var a = l[i - 1];
 		var b = l[i + 0];
 		var c = l[i + 1];
 		var ps = (a.p + b.p + c.p) / 3;
@@ -205,18 +126,18 @@ function render_brush(line, pos)
 
 	var last = l[pos];
 	var curs = document.getElementById('cursor');
-	curs.style.left= last.x + "px";
-	curs.style.top= last.y + "px";
+	curs.style.left = last.x + "px";
+	curs.style.top = last.y + "px";
 
 	right.push(last);
 
 	var stroke = left.slice();
-	for ( var i = right.length-1; i > 0; i--)
+	for (var i = right.length - 1; i > 0; i--)
 	{
 		stroke.push(right[i]);
 	}
 
-	if(stroke.length == 0)
+	if (stroke.length == 0)
 	{
 		console.log("NO points!\n");
 		return;
@@ -229,7 +150,7 @@ function render_brush(line, pos)
 	ctx.beginPath();
 	ctx.moveTo(px, py);
 
-	for ( var i = 0 ; i < stroke.length; i++ )
+	for (var i = 0; i < stroke.length; i++)
 	{
 		var p = stroke[i];
 		ctx.lineTo(p.x, p.y);
@@ -248,14 +169,23 @@ function render_brush(line, pos)
 	g = Math.floor(g)
 	b = Math.floor(b)
 
+	//ctx.stroke();
 	//	quirk alert: fillStyle doesn't accept floats for rgb but it does for A? ok
-	var str = "rgba(" + r + ", " + g + "," + b + ", " + alpha * .125 + ")";
+	var str = "rgba(" + r + ", " + g + "," + b + ", " + .125 + ")";
 	//console.log(str);
 	//ctx.fillStyle = "rgba(255, 0, 0, 0.0125)";;
+	//ctx.fillStyle = "rgba(255, 0, 0, 0.5)";;
 	ctx.fillStyle = str;
+	//ctx.strokeStyle = "black";
 	ctx.fill();
 }
 
+function toggle_skip()
+{
+	state.skipping = !state.skipping;
+	console.log(state.skipping);
+
+}
 
 function render_line(line)
 {
@@ -291,11 +221,148 @@ function do_finished_drawing()
 	remove_interval();
 	state.playing = false;
 	console.log("DONE");
-	clear();
-	setup_drawdata();
-	start_drawing();
+	//clear();
+	//setup_drawdata();
+	//start_drawing();
 	//return;
 }
+
+function show_cursor()
+{
+	var element = document.getElementById('cursor');
+	element.style.opacity = "0.9";
+	element.style.filter  = 'alpha(opacity=90)';
+}
+
+function hide_cursor()
+{
+	var element = document.getElementById('cursor');
+	element.style.opacity = "0.1";
+	element.style.filter  = 'alpha(opacity=10)';
+}
+
+function draw_integrated()
+{
+	var now = new Date().getTime() / 1000;
+	var delta = now - state['drawing_start'];
+	var aaa = state;
+
+	while (true)
+	{
+		if (state.working.lines.length == 0)
+		{
+			console.log("Donezo!\n");
+			return;
+		}
+
+		/*
+		var test = state.working.lines[0];
+		var t = test.time[0];
+		if ( t > delta )
+		{
+			//	we haven't yet reached the time do do the next one
+			return;
+
+		}
+		*/
+
+
+		if ( !state.line )
+		{
+			if ( !state.skipping )
+
+			{
+				test = state.working.lines[0];
+				t = test.time[0];
+				if ( t > delta )
+				{
+					//	we haven't yet reached the time do do the next one
+					hide_cursor();
+					return;
+				}
+			}
+			state.line = state.working.lines.shift();
+
+			if ( state.skipping )
+			{
+				var diff = state.line.time[0] - delta;
+				for ( var i = 0 ;i  < state.line.time.length; i++ )
+				{
+					state.line.time[i] -= diff;
+				}
+			}
+		}
+
+
+
+		var last_time = state.line.time[state.line.time.length - 1];
+		if (last_time < delta)
+		{
+			show_cursor();
+			render_brush(state.line);
+			state.line = null;
+			return;
+		}
+		else
+		{
+			var ind = 0;
+			for ( var i = 0 ; i < state.line.time.length; i++ )
+			{
+				var t = state.line.time[i];
+				if (t > delta )
+					break;
+				ind = i;
+			}
+			show_cursor();
+			render_brush(state.line, ind);
+
+			return;
+		}
+
+	}
+
+	/*
+	var lindex = 0;
+	for ( var i = 0 ;i < state.working.lines.length; i++ )
+	{
+		var l = state.working.lines[i];
+		var last = l.time[l.time.length-1];
+		if ( last > delta )
+		{
+			lindex = i;
+			break;
+		}
+		//console.log(last);
+	}
+	console.log(lindex);
+	*/
+
+
+
+}
+
+
+function draw_continuously()
+{
+	//	this chunk is to draw the drawing with continuous (fake) time, adding a point on each frame
+
+	//var aaa = state;
+	if (!state.line || state.cursor >= state.line.points_x.length)
+	{
+		console.log("next line");
+		state.line = state.working.lines.shift();
+		state.cursor = 0;
+	}
+	else
+	{
+		state.cursor++;
+	}
+
+	//if ( state.cursor < state.line.points_x.length)
+	render_brush(state.line, state.cursor);
+
+}
+
 
 function check_draw_content()
 {
@@ -312,24 +379,8 @@ function check_draw_content()
 		return;
 	}
 
-
-	var now = new Date().getTime() / 1000;
-	var delta = now - state['drawing_start'];
-	var aaa = state;
-	if ( !state.line || state.cursor >= state.line.points_x.length )
-	{
-		console.log("next line");
-		state.line = state.working.lines.shift();
-		state.cursor = 0;
-	}else{
-		state.cursor++;
-	}
-
-	if ( state.cursor < state.line.points_x.length)
-		render_brush(state.line, state.cursor);
-
-
-	//var next = state.working.lines.shift();
+	//draw_continuously();
+	draw_integrated();
 
 }
 
