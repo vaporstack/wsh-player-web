@@ -137,9 +137,9 @@ function zip_line(data)
 		var p = {
 			x : data.points_x[i],
 			y : data.points_y[i] * -1,
-			p : data.pressure[i]
+			p : data.pressure[i],
+			t : data.time[i]
 		}
-
 		res.push(p);
 	}
 	return res;
@@ -203,13 +203,17 @@ function render_brush(line, pos)
 
 	}
 
-	right.push(l[pos]);
+	var last = l[pos];
+	var curs = document.getElementById('cursor');
+	curs.style.left= last.x + "px";
+	curs.style.top= last.y + "px";
+
+	right.push(last);
 
 	var stroke = left.slice();
 	for ( var i = right.length-1; i > 0; i--)
 	{
 		stroke.push(right[i]);
-
 	}
 
 	if(stroke.length == 0)
@@ -217,8 +221,6 @@ function render_brush(line, pos)
 		console.log("NO points!\n");
 		return;
 	}
-
-	//console.log("Created stroke with " + stroke.length + " points");
 
 	var first = stroke[0];
 	var px, py;
@@ -234,12 +236,26 @@ function render_brush(line, pos)
 		px = p.x;
 		py = p.y;
 	}
+	var col = line['stroke'];
+	var r = col.r;
+	var g = col.g;
+	var b = col.b;
+	var alpha = col.a;
+	r *= 256;
+	g *= 256;
+	b *= 256;
+	r = Math.floor(r)
+	g = Math.floor(g)
+	b = Math.floor(b)
 
-	ctx.fillStyle = "rgba(0, 9, 0, 0.125)";;
-
+	//	quirk alert: fillStyle doesn't accept floats for rgb but it does for A? ok
+	var str = "rgba(" + r + ", " + g + "," + b + ", " + alpha * .125 + ")";
+	//console.log(str);
+	//ctx.fillStyle = "rgba(255, 0, 0, 0.0125)";;
+	ctx.fillStyle = str;
 	ctx.fill();
-
 }
+
 
 function render_line(line)
 {
@@ -347,7 +363,7 @@ function load_wash(path)
 
 function clear()
 {
-	ctx.fillStyle = "red";
+	//ctx.fillStyle = "red";
 
 	window.ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
 }
