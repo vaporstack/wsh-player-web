@@ -160,7 +160,7 @@ function mk_point()
 	return { x : -1, y : -1, p : -1 };
 }
 
-function render_brush(line)
+function render_brush(line, pos)
 {
 	var ctx = window.ctx;
 	var l = zip_line(line)
@@ -168,9 +168,18 @@ function render_brush(line)
 
 	var width = 10;
 
+	if ( pos === undefined )
+		pos = l.length-1;
+
+	if ( pos > l.length - 1 )
+	{
+		console.log("ack tried to draw more than we have");
+		pos = l.length - 1;
+	}
+
 	var left = [];
 	var right = [];
-	for ( var i = 1, n = l.length - 1; i<n; i++ )
+	for ( var i = 1, n = pos; i<n; i++ )
 	{
 		var a = l[i-1];
 		var b = l[i + 0];
@@ -194,7 +203,7 @@ function render_brush(line)
 
 	}
 
-	right.push(l[l.length-1]);
+	right.push(l[pos]);
 
 	var stroke = left.slice();
 	for ( var i = right.length-1; i > 0; i--)
@@ -209,32 +218,26 @@ function render_brush(line)
 		return;
 	}
 
-	console.log("Created stroke with " + stroke.length + " points");
+	//console.log("Created stroke with " + stroke.length + " points");
 
 	var first = stroke[0];
 	var px, py;
 	px = first.x;
 	py = first.y;
 	ctx.beginPath();
+	ctx.moveTo(px, py);
 
 	for ( var i = 0 ; i < stroke.length; i++ )
 	{
 		var p = stroke[i];
-		ctx.moveTo(px, py);
 		ctx.lineTo(p.x, p.y);
 		px = p.x;
 		py = p.y;
 	}
-	//ctx.closePath();
-	ctx.stroke();
-	ctx.fillStyle = "red";;
+
+	ctx.fillStyle = "rgba(0, 9, 0, 0.125)";;
 
 	ctx.fill();
-
-
-	//console.log(first);
-
-
 
 }
 
@@ -247,8 +250,6 @@ function render_line(line)
 
 		var x = line.points_x[i];
 		var y = line.points_y[i] * -1;
-		//x = Math.floor(x);
-		//y = Math.floor(y);
 		c.beginPath();
 		c.moveTo(x, y);
 		if (i > 0)
@@ -256,7 +257,6 @@ function render_line(line)
 		c.stroke();
 		px = x;
 		py = y;
-		// console.log(x,y);
 	}
 }
 
@@ -288,8 +288,7 @@ function check_draw_content()
 		console.log("Shouldn't be here, not playing shouldn't be echecking!");
 		return;
 	}
-	var now = new Date().getTime() / 1000;
-	var delta = now - state['drawing_start'];
+
 
 	if (state.working.lines.length == 0)
 	{
@@ -297,21 +296,31 @@ function check_draw_content()
 		return;
 	}
 
-	var next = state.working.lines.shift();
-	//console.log(next);
-	//render_line(next);
-	render_brush(next);
-	//console.log(delta);
 
-	//console.log("yep");
+	var now = new Date().getTime() / 1000;
+	var delta = now - state['drawing_start'];
+	var aaa = state;
+	if ( !state.line || state.cursor >= state.line.points_x.length )
+	{
+		console.log("next line");
+		state.line = state.working.lines.shift();
+		state.cursor = 0;
+	}else{
+		state.cursor++;
+	}
+
+	if ( state.cursor < state.line.points_x.length)
+		render_brush(state.line, state.cursor);
 
 
-	//console.log("checking draw content");
+	//var next = state.working.lines.shift();
+
 }
 
 function start_drawing()
 {
 	var d = new Date();
+	state.cursor = 0;
 	state['drawing_start'] = d.getTime() / 1000;
 	state['playing'] = true;
 	state['done'] = false;
