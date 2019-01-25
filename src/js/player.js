@@ -420,11 +420,14 @@ function clear()
 }
 
 //takes a document
-function setup_drawdata()
+function setup_drawdata(doc)
 {
-	var doc = load_wash("data/test.wash");
+	if ( !doc )
+		var doc = load_wash("data/test.wash");
 
 	//setup_drawdata(json);
+
+
 	var ldata = doc.data;
 	var lmeta = doc.meta;
 	info = $("#info");
@@ -449,7 +452,8 @@ function setup_drawdata()
 function init()
 {
 	setup_refresh();
-
+	setup_drop();
+	load_artwork();
 	var headline = $("#infotext")[0];
 	headline.innerText = "loading data...";
 

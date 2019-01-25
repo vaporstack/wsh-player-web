@@ -6,6 +6,7 @@
 	</title>
 
 	<script src="js/wsh_frame_ops.js"></script>
+	<script src="js/io.js"></script>
 	<script src="js/player.js"></script>
 	<!--script src="js/p5.min.js"></script-->
 	<script src="js/jquery.min.js"></script>
@@ -22,11 +23,23 @@
 <canvas id="player" width="256" height="256">
 	Sorry, <strong>CANVAS</strong> is not supported by your browser.
 </canvas>
-<div id="infowrap" class=" pv5  ph">
+<div id="infowrap" class="pv5 h">
 <div id="info">
 
 </div>
+<output id="list"></output>
 <div id="controls">
+
+these don't work yet:
+<button class=""
+        type="button">
+        restart
+</button>
+<button class=""
+        type="button">
+        random
+</button>
+<div id="drop_zone">drop zone</div>
 
 <form>
 	<input type="checkbox" onclick="toggle_skip()" name="skip" value="skip" id="skip">
