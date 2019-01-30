@@ -57,4 +57,5 @@ docs/
 .DS_Store
 
 *UserInterfaceState.xcuserstate
+
 *xcdebugger*
