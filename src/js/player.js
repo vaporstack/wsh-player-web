@@ -1,4 +1,4 @@
-var state = {};
+var state = {"playback_speed" : 1};
 
 function readTextFile(file)
 {
@@ -244,6 +244,7 @@ function hide_cursor()
 function draw_integrated()
 {
 	var now = new Date().getTime() / 1000;
+	now *= state.playback_speed;
 	var delta = now - state['drawing_start'];
 	var aaa = state;
 
@@ -449,10 +450,26 @@ function setup_drawdata(doc)
 
 }
 
+function setup_slider()
+{
+	var slider = document.getElementById("myRange");
+	//var output = document.getElementById("demo");
+	//output.innerHTML = slider.value; // Display the default slider value
+
+	// Update the current slider value (each time you drag the slider handle)
+	slider.oninput = function() {
+	  //output.innerHTML = this.value;
+	  console.log(this.value);
+	  state.playback_speed = this.value;
+	}
+}
+
 function init()
 {
 	setup_refresh();
 	setup_drop();
+	setup_slider();
+
 	load_artwork();
 	var headline = $("#infotext")[0];
 	headline.innerText = "loading data...";
