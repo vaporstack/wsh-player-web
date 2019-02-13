@@ -58,4 +58,5 @@ docs/
 
 *UserInterfaceState.xcuserstate
 
+*.sublime-workspace
 *xcdebugger*
