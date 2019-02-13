@@ -45,6 +45,35 @@ function get_bounds(obj)
 	return [minx, miny, maxx, maxy];
 }
 
+function makeRequest(url)
+{
+	var xhr = new XMLHttpRequest();
+	xhr.open("GET", url, true);
+	xhr.onreadystatechange = receiveResponse;
+	xhr.send();
+}
+
+function receiveResponse(e)
+{
+	if (this.readyState == 4)
+	{
+		// xhr.readyState == 4, so we've received the complete server response
+		if (this.status == 200)
+		{
+			// xhr.status == 200, so the response is good
+			var response = this.responseXML;
+			console.log(response);
+		}
+	}
+}
+
+function read_remote_wash_dir()
+{
+	console.log("HELLO");
+	var url = "REDACTED";
+	makeRequest(url);
+
+}
 
 function zip_line(data)
 {
@@ -80,6 +109,8 @@ function mk_point()
 		p: -1
 	};
 }
+
+
 
 function render_brush(line, pos)
 {
@@ -231,14 +262,14 @@ function show_cursor()
 {
 	var element = document.getElementById('cursor');
 	element.style.opacity = "0.9";
-	element.style.filter  = 'alpha(opacity=90)';
+	element.style.filter = 'alpha(opacity=90)';
 }
 
 function hide_cursor()
 {
 	var element = document.getElementById('cursor');
 	element.style.opacity = "0.1";
-	element.style.filter  = 'alpha(opacity=10)';
+	element.style.filter = 'alpha(opacity=10)';
 }
 
 function draw_integrated()
@@ -267,14 +298,14 @@ function draw_integrated()
 		*/
 
 
-		if ( !state.line )
+		if (!state.line)
 		{
-			if ( !state.skipping )
+			if (!state.skipping)
 
 			{
 				test = state.working.lines[0];
 				t = test.time[0];
-				if ( t > delta )
+				if (t > delta)
 				{
 					//	we haven't yet reached the time do do the next one
 					hide_cursor();
@@ -283,10 +314,10 @@ function draw_integrated()
 			}
 			state.line = state.working.lines.shift();
 
-			if ( state.skipping )
+			if (state.skipping)
 			{
 				var diff = state.line.time[0] - delta;
-				for ( var i = 0 ;i  < state.line.time.length; i++ )
+				for (var i = 0; i < state.line.time.length; i++)
 				{
 					state.line.time[i] -= diff;
 				}
@@ -306,10 +337,10 @@ function draw_integrated()
 		else
 		{
 			var ind = 0;
-			for ( var i = 0 ; i < state.line.time.length; i++ )
+			for (var i = 0; i < state.line.time.length; i++)
 			{
 				var t = state.line.time[i];
-				if (t > delta )
+				if (t > delta)
 					break;
 				ind = i;
 			}
@@ -420,13 +451,18 @@ function clear()
 }
 
 //takes a document
-function setup_drawdata(doc)
+
+
+function setup_drawdata(path)
 {
-	if ( !doc )
-		var doc = load_wash("data/test.wash");
+	var doc;
+	if (!path)
+	{
+		doc = load_wash("data/test.wash");
 
-	//setup_drawdata(json);
-
+	}else{
+		doc = load_wash(path);
+	}
 
 	var ldata = doc.data;
 	var lmeta = doc.meta;
@@ -449,8 +485,24 @@ function setup_drawdata(doc)
 
 }
 
+function on_wash_select(v)
+{
+	console.log("HIIII");
+	console.log(v);
+	setup_drawdata("data/" + v);
+
+}
+
 function init()
 {
+
+	read_remote_wash_dir();
+
+	$('#wash_picker').change(function()
+	{
+		on_wash_select($(this).val());
+	})
+	$("#wash_picker").change = on_wash_select;
 	setup_refresh();
 	setup_drop();
 	load_artwork();
